@@ -1,73 +1,159 @@
-// From my first version
 
 
-// clear the screen for testing
-document.body.innerHTML = '';
-var cat_names = ["Kenny","Reddy","Blacky","Pippo","Tiger","Whitey"];
-var cats = [0,1,2,3,4,5];
-var clickNumbers = [0,0,0,0,0,0];
-var selectedPic;
 
-var cont = document.createElement('div');
-cont.setAttribute("class", "container");
-document.body.appendChild(cont);
-var first_row = document.createElement('div');
-first_row.setAttribute("class", "row");
-cont.appendChild(first_row);
-var col_12 = document.createElement('div');
-col_12.setAttribute("class", "col-md-12");
-first_row.appendChild(col_12);
 
-// Let's loop over the Names in our array
-for (var i = 0; i < cat_names.length; i++) {
+/* ======= Model ======= */
 
-    var cat = cat_names[i];
+var model = {
 
-    // We're creating a DOM element for the number
-    var elem = document.createElement('div');
-    elem.textContent = cat;
-    elem.addEventListener('click', (function(nameCopy) {
-        return function() {
-            showSelCat(nameCopy);
-        };
-    })(i));
+    currentCat: null,
 
-    col_12.appendChild(elem);
+    cats: [
+        {
+            clickCount : 0,
+            name : 'Kenny',
+            imgSrc : 'images/0.jpg',
+            imgAttribution : 'https://www.flickr.com/photos/bigtallguy/434164568'
+        },
+        {
+            clickCount : 0,
+            name : 'Reddy',
+            imgSrc : 'images/1.jpg',
+            imgAttribution : 'https://www.flickr.com/photos/xshamx/4154543904'
+        },
+        {
+            clickCount : 0,
+            name : 'Blacky',
+            imgSrc : 'images/2.jpg',
+            imgAttribution : 'https://www.flickr.com/photos/kpjas/22252709'
+        },
+        {
+            clickCount : 0,
+            name : 'Pippo',
+            imgSrc : 'images/3.jpg',
+            imgAttribution : 'https://www.flickr.com/photos/malfet/1413379559'
+        },
+        {
+            clickCount : 0,
+            name : 'Tiger',
+            imgSrc : 'images/4.jpg',
+            imgAttribution : 'https://www.flickr.com/photos/onesharp/9648464288'
+        },
+        {
+            clickCount : 0,
+            name : 'Whitey',
+            imgSrc : 'images/5.jpg',
+            imgAttribution : 'https://www.flickr.com/photos/onesharp/9648464288'
+        }
+    ]
 };
 
 
-var showSelCat = function(num) {
-    selectedPic=num;
-    img.setAttribute("src", "images/"+num+".jpg");
-    name_cat.innerHTML = cat_names[num];
-    clickNumber.innerHTML = clickNumbers[num];
-}
+/* ======= Octopus ======= */
+
+var octopus = {
+
+    init: function() {
+        // set our current cat to the first one in the list
+        model.currentCat = model.cats[0];
+
+        // tell our views to initialize
+        catListView.init();
+        catView.init();
+    },
+
+    getCurrentCat: function() {
+        return model.currentCat;
+    },
+
+    getCats: function() {
+        return model.cats;
+    },
+
+    // set the currently-selected cat to the object passed in
+    setCurrentCat: function(cat) {
+        model.currentCat = cat;
+    },
+
+    // increments the counter for the currently-selected cat
+    incrementCounter: function() {
+        model.currentCat.clickCount++;
+        catView.render();
+    }
+};
 
 
-var cont2 = document.createElement('div');
-cont2.setAttribute("class", "container");
-document.body.appendChild(cont2);
-var sec_row = document.createElement('div');
-sec_row.setAttribute("class", "row");
-cont2.appendChild(sec_row);
-var col2_12 = document.createElement('div');
-col2_12.setAttribute("class", "col-md-12");
-sec_row.appendChild(col2_12);
-var img = document.createElement('img');
-img.setAttribute("class", "cat-images-big");
-col2_12.appendChild(img);
+/* ======= View ======= */
 
-var name_cat = document.createElement('p');
-col2_12.appendChild(name_cat);
-var clickNumber = document.createElement('p');
-clickNumber.setAttribute("id", "click-label");
-col2_12.appendChild(clickNumber);
+var catView = {
 
+    init: function() {
+        // store pointers to our DOM elements for easy access later
+        this.catElem = document.getElementById('cat');
+        this.catNameElem = document.getElementById('cat-name');
+        this.catImageElem = document.getElementById('cat-img');
+        this.countElem = document.getElementById('cat-count');
 
+        // on click, increment the current cat's counter
+        this.catImageElem.addEventListener('click', function(){
+            octopus.incrementCounter();
+        });
 
-$('.cat-images-big').click(function(e) {
-    clickNumbers[selectedPic]+=1;
-    var clickToShow = clickNumbers[selectedPic];
-    $('#click-label').text(clickToShow);
-});
+        // render this view (update the DOM elements with the right values)
+        this.render();
+    },
 
+    render: function() {
+        // update the DOM elements with values from the current cat
+        var currentCat = octopus.getCurrentCat();
+        this.countElem.textContent = currentCat.clickCount;
+        this.catNameElem.textContent = currentCat.name;
+        this.catImageElem.src = currentCat.imgSrc;
+    }
+};
+
+var catListView = {
+
+    init: function() {
+        // store the DOM element for easy access later
+        this.catListElem = document.getElementById('cat-list');
+
+        // render this view (update the DOM elements with the right values)
+        this.render();
+    },
+
+    render: function() {
+        var cat, elem, i;
+        // get the cats we'll be rendering from the octopus
+        var cats = octopus.getCats();
+
+        // empty the cat list
+        this.catListElem.innerHTML = '';
+
+        // loop over the cats
+        for (i = 0; i < cats.length; i++) {
+            // this is the cat we're currently looping over
+            cat = cats[i];
+
+            // make a new cat list item and set its text
+            elem = document.createElement('li');
+            elem.textContent = cat.name;
+
+            // on click, setCurrentCat and render the catView
+            // (this uses our closure-in-a-loop trick to connect the value
+            //  of the cat variable to the click event function)
+            elem.addEventListener('click', (function(catCopy) {
+                return function() {
+                    octopus.setCurrentCat(catCopy);
+                    catView.render();
+                };
+            })(cat));
+
+            // finally, add the element to the list
+            this.catListElem.appendChild(elem);
+        }
+    }
+};
+
+// make it go!
+octopus.init();
