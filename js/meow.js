@@ -1,7 +1,4 @@
 
-
-
-
 /* ======= Model ======= */
 
 var model = {
@@ -60,6 +57,12 @@ var octopus = {
         // tell our views to initialize
         catListView.init();
         catView.init();
+
+        //INIZIO FASE PRO
+        adminView.init();
+
+        this.adminPanel = $("#admin-view");
+        this.hideAdminView();
     },
 
     getCurrentCat: function() {
@@ -78,6 +81,49 @@ var octopus = {
     // increments the counter for the currently-selected cat
     incrementCounter: function() {
         model.currentCat.clickCount++;
+        catView.render();
+    },
+    adminClicked: function(){
+        if(this.admin_view_visible){
+            this.hideAdminView();
+        }
+        else{
+            this.showAdminView();
+        }
+    },
+    showAdminView: function(){
+        console.log("show admin panel");
+        this.admin_view_visible = true;
+        this.adminPanel.show();
+    },
+    hideAdminView: function(){
+        console.log("hide admin panel");
+        this.admin_view_visible = false;
+        this.adminPanel.hide();
+    },
+    cancelClicked: function(){
+        adminView.newName.value="";
+        adminView.newPath.value="";
+        adminView.newClickNum.value="";
+        this.hideAdminView();
+    },
+    getCurrentCatIndex: function(cat){
+        var index;
+        for(var i=0;i<model.cats.length;i++){
+            if(cat==model.cats[i])
+                index = i;
+        }
+        return index;
+    },
+        saveClicked: function(){
+        console.log("save click");
+        //var currentCat = this.getCurrentCat();
+        var catIndex = this.getCurrentCatIndex(this.getCurrentCat());
+        console.log(catIndex);
+        model.cats[catIndex].name = adminView.newName.value;
+        model.cats[catIndex].clickCount = adminView.newClickNum.value;
+        //model.cats[catIndex].imgAttribution = adminView.newPath.value;
+        catListView.render();
         catView.render();
     }
 };
@@ -154,6 +200,37 @@ var catListView = {
         }
     }
 };
+
+
+var adminView = {
+
+    init: function(){
+        // PRO PRO PRO
+        //var adminButton = $('admin_button');
+        this.adminButton = document.getElementById('admin_button');
+        this.saveButton = document.getElementById('save_button');
+        this.cancelButton = document.getElementById('canc_button');
+        this.newName = document.getElementById('img_name');
+        this.newPath = document.getElementById('img_path');
+        this.newClickNum = document.getElementById('img_clickNum');
+
+        // on click ADMIN
+        this.adminButton.addEventListener('click', function(){
+            console.log("click admin button ");
+            octopus.adminClicked();
+        });
+        //on click SAVE
+        this.saveButton.addEventListener('click', function(){
+            console.log("click SAVE button ");
+            octopus.saveClicked();
+        });
+        //on click CANCEL
+        this.cancelButton.addEventListener('click', function(){
+            console.log("click CANCEL button ");
+            octopus.cancelClicked();
+        });
+    }
+}
 
 // make it go!
 octopus.init();
